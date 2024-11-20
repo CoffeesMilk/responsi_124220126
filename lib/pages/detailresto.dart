@@ -48,7 +48,7 @@ class _detailrestoState extends State<detailresto> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manga'),
+        title: Text('Detail Restoran'),
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
