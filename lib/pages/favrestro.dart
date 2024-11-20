@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:hive/hive.dart';
+import 'package:responsi_124220126/models/boxes.dart';
 import 'package:responsi_124220126/pages/detailresto.dart';
-import 'package:responsi_124220126/pages/favrestro.dart';
-import 'package:responsi_124220126/pages/loginpage.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
-class homepage extends StatefulWidget {
-  const homepage({super.key});
+class favresto extends StatefulWidget {
+  const favresto({super.key});
 
   @override
-  State<homepage> createState() => _homepageState();
+  State<favresto> createState() => _favrestoState();
 }
 
-class _homepageState extends State<homepage> {
-  String? username = '';
+class _favrestoState extends State<favresto> {
   late SharedPreferences logindata;
-  Future<List<dynamic>> fetchlistresto() async {
-    final apiresto =
-        await Dio().get('https://restaurant-api.dicoding.dev/list');
+  Future<Map<String, dynamic>> fetchdetail() async {
+    final box = await Hive.openBox(HiveBoxex.user);
+    final response = await Dio()
+        .get('https://restaurant-api.dicoding.dev/detail/${box.get('id')}');
 
-    if (apiresto.statusCode == 200) {
-      return apiresto.data['restaurants'];
+    if (response.statusCode == 200) {
+      return response.data['restaurant'] as Map<String, dynamic>;
     } else {
       throw Exception('Bad request');
     }
@@ -30,9 +29,9 @@ class _homepageState extends State<homepage> {
   @override
   void initState() {
     super.initState();
-    fetchlistresto().then((data) {
+    fetchdetail().then((data) {
       setState(() {
-        listresto = data;
+        detail = data;
       });
     });
     initial();
@@ -40,43 +39,48 @@ class _homepageState extends State<homepage> {
 
   void initial() async {
     logindata = await SharedPreferences.getInstance();
-    setState(() {
-      username = logindata.getString('username');
-    });
   }
 
-  List<dynamic> listresto = [];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    fetchfavorite();
+  }
+
+  void fetchfavorite() async {
+    final box = await Hive.openBox(HiveBoxex.user);
+    final currentuser = box.get(logindata.getString('username'));
+    if (currentuser != null) {
+      List<dynamic> favoriteRestaurants = [];
+      for (String id in currentuser.like) {
+        final response =
+            await Dio().get('https://restaurant-api.dicoding.dev/detail/$id');
+        if (response.statusCode == 200) {
+          favoriteRestaurants.add(response.data['restaurant']);
+        }
+      }
+      setState(() {
+        listrestofav = favoriteRestaurants;
+      });
+    }
+  }
+
+  Map<String, dynamic> detail = {};
+  List<dynamic> listrestofav = [];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('List Restoran'),
+        title: Text('Favorite Restoran'),
         centerTitle: true,
         backgroundColor: Colors.blue,
-        actions: [
-          IconButton(
-            icon: new Icon(Icons.list_alt, color: Colors.black),
-            onPressed: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => favresto()));
-            },
-          ),
-          IconButton(
-            icon: new Icon(Icons.logout, color: Colors.black),
-            onPressed: () {
-              logindata.setBool('login', true);
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => loginpage()));
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Center(
             child: SingleChildScrollView(
           child: Column(
-            children: listresto.map((resto) {
+            children: listrestofav.map((resto) {
               return Card(
                 child: Column(
                   children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:responsi_124220126/models/boxes.dart';
 import 'package:responsi_124220126/pages/homepage.dart';
 import 'package:responsi_124220126/pages/registerpage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,9 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
 
 class loginpage extends StatefulWidget {
-  final String password;
-  final String username;
-  loginpage({super.key, required this.username, required this.password});
+  loginpage({super.key});
 
   @override
   State<loginpage> createState() => _loginpageState();
@@ -134,17 +133,21 @@ class _loginpageState extends State<loginpage> {
   }
 
   void login() async {
-    if (username_controler != null &&
-        username_controler == '${widget.username}' &&
-        password_controler == '${widget.password}') {
-      logindata.setString('username', username_controler);
-      logindata.setBool('login', false);
+    final box = await Hive.openBox(HiveBoxex.user);
+    final user = box.values.firstWhere(
+        (user) =>
+            user.username == username_controler &&
+            user.password == password_controler,
+        orElse: () => null);
 
+    if (user != null) {
+      logindata.setString('username', user.username);
+      logindata.setBool('login', false);
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => homepage()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login gagal pastikan anda memiliki akun')),
+        SnackBar(content: Text('Invalid username or password')),
       );
     }
   }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:responsi_124220126/pages/loginpage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:responsi_124220126/models/boxes.dart';
+import 'package:responsi_124220126/models/user.dart';
 
 class registerpage extends StatefulWidget {
   registerpage({super.key});
@@ -110,7 +113,7 @@ class _registerpageState extends State<registerpage> {
                           EdgeInsets.symmetric(horizontal: 50, vertical: 10),
                       child: ElevatedButton(
                           onPressed: () {
-                            register();
+                            validated();
                             debugPrint('username: $username_controler');
                             debugPrint('password: $password_controler');
                           },
@@ -119,15 +122,10 @@ class _registerpageState extends State<registerpage> {
                       padding: EdgeInsets.symmetric(horizontal: 50),
                       child: TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Register berhasil')),
-                            );
                             Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => loginpage(
-                                        username: username_controler,
-                                        password: password_controler)));
+                                    builder: (context) => loginpage()));
                           },
                           child: Text('Login'))),
                 ],
@@ -140,11 +138,13 @@ class _registerpageState extends State<registerpage> {
   }
 
   void register() async {
-    username = username_controler;
-    password = password_controler;
+    final box = await Hive.openBox(HiveBoxex.user);
+    box.add(user(username: username_controler, password: password_controler));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Register berhasil')),
     );
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => loginpage()));
   }
 
   validated() {
