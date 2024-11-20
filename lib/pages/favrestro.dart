@@ -51,16 +51,16 @@ class _favrestoState extends State<favresto> {
     final box = await Hive.openBox(HiveBoxex.user);
     final currentuser = box.get(logindata.getString('username'));
     if (currentuser != null) {
-      List<dynamic> favoriteRestaurants = [];
+      List<dynamic> favoriterestaurants = [];
       for (String id in currentuser.like) {
         final response =
             await Dio().get('https://restaurant-api.dicoding.dev/detail/$id');
         if (response.statusCode == 200) {
-          favoriteRestaurants.add(response.data['restaurant']);
+          favoriterestaurants.add(response.data['restaurant']);
         }
       }
       setState(() {
-        listrestofav = favoriteRestaurants;
+        listrestofav = favoriterestaurants;
       });
     }
   }
